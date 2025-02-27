@@ -28,7 +28,7 @@ import numpy as np
 import os
 import torch
 from PIL import Image
-
+from typing import List, Union
 from .differentiable_renderer.mesh_render import MeshRender
 from .utils.dehighlight_utils import Light_Shadow_Remover
 from .utils.multiview_utils import Multiview_Diffusion_Net
@@ -182,16 +182,20 @@ class Hunyuan3DPaintPipeline:
         return new_image
 
     @torch.no_grad()
-    def __call__(self, mesh, image):
+    def __call__(self, mesh, images: List[Union[str, Image.Image]], inf_steps):
 
-        if isinstance(image, str):
-            image_prompt = Image.open(image)
-        else:
-            image_prompt = image
+        image_prompts = []
+        for image in images: 
+            if isinstance(image, str):
+                image_prompt = Image.open(image)
+            else:
+                image_prompt = image
+
+            image_prompt = self.recenter_image(image_prompt)
+            image_prompts.append(image_prompt)
         
-        image_prompt = self.recenter_image(image_prompt)
 
-        image_prompt = self.models['delight_model'](image_prompt)
+        image_prompts = self.models['delight_model'](image_prompts)
 
         mesh = mesh_uv_wrap(mesh)
 
@@ -208,7 +212,7 @@ class Hunyuan3DPaintPipeline:
         camera_info = [(((azim // 30) + 9) % 12) // {-20: 1, 0: 1, 20: 1, -90: 3, 90: 3}[
             elev] + {-20: 0, 0: 12, 20: 24, -90: 36, 90: 40}[elev] for azim, elev in
                        zip(selected_camera_azims, selected_camera_elevs)]
-        multiviews = self.models['multiview_model'](image_prompt, normal_maps + position_maps, camera_info)
+        multiviews = self.models['multiview_model'](image_prompts, normal_maps + position_maps, camera_info, inf_steps)
 
         for i in range(len(multiviews)):
             multiviews[i] = self.models['super_model'](multiviews[i])
