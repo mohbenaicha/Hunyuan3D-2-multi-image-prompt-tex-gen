@@ -1,21 +1,15 @@
 [中文阅读](README_zh_cn.md)
 [日本語で読む](README_ja_jp.md)
-<style>
-.tag {
-    background-color: #f4f4f4;
-    font-size: 13px;
-    font-weight: bold;
-    color: #d73a49;
-    padding: 3px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-}
-</style>
+
 <div>
 <h3>About this fork:</h3>
-<span class="tag">1. multiple image prompts</span><br>
-<span class="tag" style="color:#22863a;">2. increase texture resolution</span><br>
-<span class="tag" style="color:#005cc5;">3. improve inference speed</span><br><br>
+    
+:one: multiple image prompts
+    
+:two: increase texture resolution
+
+:three: improve inference speed
+
 <p>I've added the ability to generate a texture for a model using multiple image prompts, as well as set other configuration like output texture resolution and render size. Multiple image prompts improve the texturing of the model from various other angles if they're included as prompts.</p>
 <p>You'll need to run main.py specifying parameters like:
 <ul>
