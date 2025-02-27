@@ -106,7 +106,7 @@ class HunyuanPaintPipeline(StableDiffusionPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        image: Image.Image = None,
+        image: List[Image.Image] = None, # normally Image.Image
         prompt=None,
         negative_prompt='watermark, ugly, deformed, noisy, blurry, low contrast',
         *args,
@@ -121,17 +121,18 @@ class HunyuanPaintPipeline(StableDiffusionPipeline):
     ):
         if image is None:
             raise ValueError("Inputting embeddings not supported for this pipeline. Please pass an image.")
-        assert not isinstance(image, torch.Tensor)
+                
+        assert isinstance(image, list)  # Ensure that it's a list of images
+        assert all(isinstance(img, Image.Image) for img in image)  # Ensure all items are PIL images
 
-        image = to_rgb_image(image)
-
-        image_vae = torch.tensor(np.array(image) / 255.0)
-        image_vae = image_vae.unsqueeze(0).permute(0, 3, 1, 2).unsqueeze(0)
+        image_vae = torch.stack([torch.tensor(np.array(to_rgb_image(img)) / 255.0) for img in image])
+        
+        # Convert to the right shape for the VAE
+        image_vae = image_vae.permute(0, 3, 1, 2).unsqueeze(0)  # Convert to (B, C, H, W)
         image_vae = image_vae.to(device=self.vae.device, dtype=self.vae.dtype)
 
-        batch_size = image_vae.shape[0]
-        assert batch_size == 1
-        assert num_images_per_prompt == 1
+        # assert num_images_per_prompt == 1
+        num_images_per_prompt = image_vae.shape[0]
 
         ref_latents = self.encode_images(image_vae)
 
@@ -439,7 +440,7 @@ class HunyuanPaintPipeline(StableDiffusionPipeline):
         timesteps, num_inference_steps = retrieve_timesteps(
             self.scheduler, num_inference_steps, device, timesteps, sigmas
         )
-        assert num_images_per_prompt == 1
+        # assert num_images_per_prompt == 1
         # 5. Prepare latent variables
         num_channels_latents = self.unet.config.in_channels
         latents = self.prepare_latents(

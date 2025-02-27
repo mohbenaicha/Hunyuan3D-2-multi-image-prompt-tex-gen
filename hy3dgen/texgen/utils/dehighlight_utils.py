@@ -26,6 +26,7 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
+from typing import List
 from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 
 
@@ -73,31 +74,32 @@ class Light_Shadow_Remover():
         return corrected_bgr
 
     @torch.no_grad()
-    def __call__(self, image):
+    def __call__(self, images: List[Image.Image]) -> List[Image.Image]:
+        results = []
+        for image in images:
+            image = image.resize((512, 512))
 
-        image = image.resize((512, 512))
+            if image.mode == 'RGBA':
+                image_array = np.array(image)
+                alpha_channel = image_array[:, :, 3]
+                erosion_size = 3
+                kernel = np.ones((erosion_size, erosion_size), np.uint8)
+                alpha_channel = cv2.erode(alpha_channel, kernel, iterations=1)
+                image_array[alpha_channel == 0, :3] = 255
+                image_array[:, :, 3] = alpha_channel
+                image = Image.fromarray(image_array)
 
-        if image.mode == 'RGBA':
-            image_array = np.array(image)
-            alpha_channel = image_array[:, :, 3]
-            erosion_size = 3
-            kernel = np.ones((erosion_size, erosion_size), np.uint8)
-            alpha_channel = cv2.erode(alpha_channel, kernel, iterations=1)
-            image_array[alpha_channel == 0, :3] = 255
-            image_array[:, :, 3] = alpha_channel
-            image = Image.fromarray(image_array)
+                image_tensor = torch.tensor(np.array(image) / 255.0).to(self.device)
+                alpha = image_tensor[:, :, 3:]
+                rgb_target = image_tensor[:, :, :3]
+            else:
+                image_tensor = torch.tensor(np.array(image) / 255.0).to(self.device)
+                alpha = torch.ones_like(image_tensor)[:, :, :1]
+                rgb_target = image_tensor[:, :, :3]
 
-            image_tensor = torch.tensor(np.array(image) / 255.0).to(self.device)
-            alpha = image_tensor[:, :, 3:]
-            rgb_target = image_tensor[:, :, :3]
-        else:
-            image_tensor = torch.tensor(np.array(image) / 255.0).to(self.device)
-            alpha = torch.ones_like(image_tensor)[:, :, :1]
-            rgb_target = image_tensor[:, :, :3]
+            image = image.convert('RGB')
 
-        image = image.convert('RGB')
-
-        image = self.pipeline(
+            image = self.pipeline(
             prompt="",
             image=image,
             generator=torch.manual_seed(42),
@@ -106,12 +108,14 @@ class Light_Shadow_Remover():
             num_inference_steps=50,
             image_guidance_scale=self.cfg_image,
             guidance_scale=self.cfg_text,
-        ).images[0]
+            ).images[0]
 
-        image_tensor = torch.tensor(np.array(image)/255.0).to(self.device)
-        rgb_src = image_tensor[:,:,:3]
-        image = self.recorrect_rgb(rgb_src, rgb_target, alpha)
-        image = image[:,:,:3]*image[:,:,3:] + torch.ones_like(image[:,:,:3])*(1.0-image[:,:,3:])
-        image = Image.fromarray((image.cpu().numpy()*255).astype(np.uint8))
+            image_tensor = torch.tensor(np.array(image)/255.0).to(self.device)
+            rgb_src = image_tensor[:,:,:3]
+            image = self.recorrect_rgb(rgb_src, rgb_target, alpha)
+            image = image[:,:,:3]*image[:,:,3:] + torch.ones_like(image[:,:,:3])*(1.0-image[:,:,3:])
+            image = Image.fromarray((image.cpu().numpy()*255).astype(np.uint8))
 
-        return image
+            results.append(image)
+        
+        return results

@@ -56,11 +56,11 @@ class Multiview_Diffusion_Net():
         torch.manual_seed(seed)
         os.environ["PL_GLOBAL_SEED"] = str(seed)
 
-    def __call__(self, input_image, control_images, camera_info):
+    def __call__(self, input_images, control_images, camera_info, inf_steps):
 
         self.seed_everything(0)
 
-        input_image = input_image.resize((self.view_size, self.view_size))
+        input_images = [input_image.resize((self.view_size, self.view_size)) for input_image in input_images]
         for i in range(len(control_images)):
             control_images[i] = control_images[i].resize((self.view_size, self.view_size))
             if control_images[i].mode == 'L':
@@ -82,5 +82,5 @@ class Multiview_Diffusion_Net():
         kwargs["normal_imgs"] = normal_image
         kwargs["position_imgs"] = position_image
 
-        mvd_image = self.pipeline(input_image, num_inference_steps=30, **kwargs).images
+        mvd_image = self.pipeline(input_images, num_inference_steps=inf_steps, **kwargs).images
         return mvd_image

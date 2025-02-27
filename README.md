@@ -1,5 +1,37 @@
 [中文阅读](README_zh_cn.md)
 [日本語で読む](README_ja_jp.md)
+<style>
+.tag {
+    background-color: #f4f4f4;
+    font-size: 13px;
+    font-weight: bold;
+    color: #d73a49;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+</style>
+<div>
+<h3>About this fork:</h3>
+<span class="tag">1. multiple image prompts</span><br>
+<span class="tag" style="color:#22863a;">2. increase texture resolution</span><br>
+<span class="tag" style="color:#005cc5;">3. improve inference speed</span><br><br>
+<p>I've added the ability to generate a texture for a model using multiple image prompts, as well as set other configuration like output texture resolution and render size. Multiple image prompts improve the texturing of the model from various other angles if they're included as prompts.</p>
+<p>You'll need to run main.py specifying parameters like:
+<ul>
+<li><b>mesh_path</b>: relative or absolute path to your a .glb/.gltf mesh file - doesn't need UVs. Ex: ./input_mesh.glb</li>
+<li><b>image_prompts</b>: relative or absolute path to a directory containing image files that are your image prompts. Ex: ./prompt_images</li>
+<li><b>texture_resolution</b>: the resolution of the generated texture for the mesh. You can later unpack this in Blender or using trimesh. Ex: 2048</li>
+<li><b>render_size</b>: the render resolution to use to capture guidance images of your 3D model. Larger render size slow down inference. The actual rendering is handled by the model. I haven't seen significant improvements above 1024 for some of the 3D models i've tested. Ex: 1024</li>
+<li><b>output_path</b>: the output 3D model filepath, make sure the directory exists! Ex: textured_mesh.glb</li>
+<li><b>inference_steps</b>: the number of steps to take to generate the texture (diffusion inference steps. Fiddle around with this a bit, even 10 steps can generate good textures. Ex: 15</li>
+</ul>
+</p>
+<p><b>Example command</b>:</p>
+<code>python custom_tex_gen.py --mesh_path input_mesh.glb --image_prompts ./images --texture_resolution 4096 --render_size 1024 --output_path output.glb --inference_steps 30</code><br>
+<br>
+</div>
+<br><br>
 
 <p align="center"> 
   <img src="./assets/images/teaser.jpg">
