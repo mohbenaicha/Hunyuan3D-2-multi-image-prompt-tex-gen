@@ -33,10 +33,15 @@ def mesh_uv_wrap(mesh):
     if len(mesh.faces) > 500000000:
         raise ValueError("The mesh has more than 500,000,000 faces, which is not supported.")
 
+    if not mesh.vertex_normals.size:
+        mesh.compute_vertex_normals()
+    
     vmapping, indices, uvs = xatlas.parametrize(mesh.vertices, mesh.faces)
+    new_normals = mesh.vertex_normals[vmapping]
 
     mesh.vertices = mesh.vertices[vmapping]
     mesh.faces = indices
     mesh.visual.uv = uvs
+    mesh.vertex_normals = new_normals
 
     return mesh
