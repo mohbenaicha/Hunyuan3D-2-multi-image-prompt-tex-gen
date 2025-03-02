@@ -10,6 +10,8 @@
 
 :three: improve inference speed
 
+:four: fixed vertex normals during uv unwrapping
+
 <p>I've added the ability to generate a texture for a model using multiple image prompts, as well as set other configuration like output texture resolution and render size. Multiple image prompts improve the texturing of the model from various other angles if they're included as prompts.</p>
 <p>You'll need to run main.py specifying parameters like:
 <ul>
