@@ -13,7 +13,7 @@
 :four: fixed vertex normals during uv unwrapping
 
 <p>I've added the ability to generate a texture for a model using multiple image prompts, as well as set other configuration like output texture resolution and render size. Multiple image prompts improve the texturing of the model from various other angles if they're included as prompts.</p>
-<p>You'll need to run main.py specifying parameters like:
+<p>You'll need to run custom_tex_gen.py specifying parameters like:
 <ul>
 <li><b>mesh_path</b>: relative or absolute path to your a .glb/.gltf mesh file - doesn't need UVs. Ex: ./input_mesh.glb</li>
 <li><b>image_prompts</b>: relative or absolute path to a directory containing image files that are your image prompts. Ex: ./prompt_images</li>
